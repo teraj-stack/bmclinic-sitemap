@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa Strony bmclinic.co — MindNode (Swobodny układ)</title>
+  <style>
+    :root {
+      --bg: #0c1020;
+      --surface: #13192e;
+      --card: #1a2340;
+      --card-hover: #222d52;
+      --border: #2e3d66;
+      --text: #f8fafc;
+      --muted: #a5b4d4;
+      --dot: rgba(165, 180, 212, 0.22);
+      --accent: #ff6ec7;
+    }
+    body.light {
+      --bg: #fdf7ff;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --card-hover: #fff5fc;
+      --border: #e5d4f5;
+      --text: #1e1b4b;
+      --muted: #5b547a;
+      --dot: rgba(139, 92, 246, 0.2);
+      --accent: #ec4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      user-select: none;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+    }
+    header {
+      min-height: 58px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 20;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ff6ec7, #7c3aed, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 14px rgba(255, 110, 199, 0.4);
+    }
+    .brand h1 { font-size: 15px; font-weight: 800; line-height: 1.2; }
+    .brand small { display: block; font-size: 11.5px; color: var(--muted); }
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .segmented {
+      display: inline-flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2px;
+    }
+    .segmented button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .segmented button.active {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: #fff;
+    }
+    .btn {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 11px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--card-hover); border-color: var(--accent); }
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-color: transparent;
+      color: #fff;
+    }
+    .btn-primary:hover { opacity: 0.92; }
+    .search {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 11px;
+      font-size: 12.5px;
+      width: 210px;
+      outline: none;
+    }
+    .search:focus { border-color: var(--accent); }
+    .workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+    #canvas {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      background-image: radial-gradient(var(--dot) 1.4px, transparent 1.4px);
+      background-size: 26px 26px;
+    }
+    #canvas.dragging-canvas { cursor: grabbing; }
+    #world {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+    }
+    #edges {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      overflow: visible;
+      pointer-events: none;
+    }
+    /* BIG, ULTRA-READABLE CANDY-STYLED CARDS */
+    .node {
+      position: absolute;
+      border-radius: 18px;
+      background: var(--card);
+      border: 2.5px solid var(--border);
+      padding: 14px 16px 13px 18px;
+      cursor: grab;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+      transition: box-shadow 0.15s, opacity 0.15s, border-color 0.15s;
+    }
+    body.light .node {
+      box-shadow: 0 10px 26px rgba(109, 40, 217, 0.12);
+    }
+    .node:hover {
+      background: var(--card-hover);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42);
+    }
+    .node.is-dragging {
+      cursor: grabbing;
+      z-index: 50;
+      transform: scale(1.03);
+      transition: none;
+    }
+    .node.root {
+      background: linear-gradient(135deg, #ff6ec7 0%, #8b5cf6 52%, #06b6d4 100%);
+      border-color: rgba(255, 255, 255, 0.7);
+      color: #fff;
+      padding: 18px 20px;
+      border-radius: 22px;
+    }
+    .node.dimmed { opacity: 0.18; }
+    .node-accent {
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 6px;
+      border-radius: 0 6px 6px 0;
+    }
+    .node-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .node-emoji {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+    }
+    body.light .node-emoji {
+      background: rgba(236, 72, 153, 0.08);
+      border-color: rgba(236, 72, 153, 0.2);
+    }
+    .node.root .node-emoji {
+      width: 48px;
+      height: 48px;
+      font-size: 26px;
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .node-title {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .node.root .node-title { font-size: 21px; }
+    .node-path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .node.root .node-path { color: rgba(255, 255, 255, 0.92); }
+    .node-open {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .node-open:hover { background: rgba(255, 110, 199, 0.22); color: #fff; }
+    .node.root .node-open { color: #fff; }
+    .node-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1.5px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge.base { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.45); }
+    .badge.done { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.45); }
+    .badge.api { background: rgba(244, 63, 94, 0.2); color: #fb7185; border-color: rgba(244, 63, 94, 0.45); }
+    .badge.todo { background: rgba(251, 191, 36, 0.22); color: #fcd34d; border-color: rgba(251, 191, 36, 0.5); }
+    body.light .badge.base { color: #047857; }
+    body.light .badge.done { color: #0369a1; }
+    body.light .badge.api { color: #be123c; }
+    body.light .badge.todo { color: #b45309; }
+    .collapse-btn {
+      border: none;
+      background: rgba(148, 163, 184, 0.18);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .collapse-btn:hover { background: rgba(255, 110, 199, 0.28); }
+
+    /* INSPECTOR WITH BIG THUMBNAIL + CANDY PICKER */
+    aside {
+      width: 540px;
+      max-width: 48vw;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: width 0.2s ease;
+    }
+    aside.size-xl { width: 720px; max-width: 58vw; }
+    aside.hidden { display: none; }
+    .inspector-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .inspector-title { font-size: 18px; font-weight: 800; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+    .inspector-path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      color: var(--accent);
+      margin-top: 3px;
+    }
+    .inspector-desc { font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+    .preview-card {
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #070b14;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+    }
+    .preview-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 7px 10px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .preview-bar-actions { display: flex; align-items: center; gap: 5px; }
+    .preview-bar button {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+    .preview-bar button:hover,
+    .preview-bar button.active { border-color: var(--accent); color: var(--accent); }
+    .preview-viewport {
+      position: relative;
+      width: 100%;
+      height: 330px;
+      overflow: hidden;
+      background: #0f172a;
+      cursor: pointer;
+      transition: height 0.2s ease;
+    }
+    aside.size-xl .preview-viewport { height: 450px; }
+    .preview-viewport iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1280px;
+      height: 860px;
+      border: none;
+      transform: scale(0.396);
+      transform-origin: 0 0;
+      pointer-events: none;
+      background: #fff;
+      transition: transform 0.2s ease;
+    }
+    aside.size-xl .preview-viewport iframe { transform: scale(0.536); }
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 10px;
+      background: linear-gradient(to top, rgba(11,16,27,0.55), transparent 45%);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .preview-viewport:hover .preview-overlay { opacity: 1; }
+    .preview-overlay span {
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+    .preview-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #94a3b8;
+      background: #0f172a;
+      z-index: 2;
+    }
+    .preview-loading.done { display: none; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .emoji-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .emoji-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .emoji-btn:hover,
+    .emoji-btn.active {
+      border-color: var(--accent);
+      background: rgba(255, 110, 199, 0.2);
+      transform: scale(1.08);
+    }
+    .color-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .color-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .color-swatch.active {
+      border-color: #fff;
+      transform: scale(1.16);
+    }
+    .status-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .status-picker button {
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      padding: 7px 9px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .status-picker button.active {
+      border-color: var(--accent);
+      background: rgba(255, 110, 199, 0.16);
+      color: var(--accent);
+    }
+    .child-list { display: flex; flex-direction: column; gap: 6px; }
+    .child-item {
+      text-align: left;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+      cursor: pointer;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .child-item:hover { border-color: var(--accent); }
+    .child-item strong { display: block; font-size: 13px; }
+    .child-item span { font-family: monospace; font-size: 11.5px; color: var(--muted); }
+
+    .legend {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      z-index: 10;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+    .stats { font-size: 12px; color: var(--muted); font-weight: 700; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 16, 0.84);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      width: min(1280px, 95vw);
+      height: min(860px, 92vh);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    .modal-head {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+      gap: 10px;
+    }
+    .modal-iframe { flex: 1; width: 100%; border: none; background: #fff; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">✨</div>
+        <div>
+          <h1>Mapa Strony bmclinic.co — Swobodny MindNode</h1>
+          <small id="statsText">Ładowanie struktury...</small>
+        </div>
+      </div>
+
+      <div class="toolbar-group">
+        <div class="segmented">
+          <button id="btnMindnode" class="active">🌈 MindNode</button>
+          <button id="btnTree">🌳 Drzewo</button>
+        </div>
+
+        <input id="searchInput" class="search" type="text" placeholder="🔍 Szukaj strony..." />
+
+        <button id="btnExpandAll" class="btn">Rozwiń</button>
+        <button id="btnCollapse" class="btn">Zwiń</button>
+        <button id="btnResetPos" class="btn" title="Ułóż kafelki z powrotem w równy schemat">↺ Resetuj układ</button>
+        <button id="btnZoomOut" class="btn">−</button>
+        <span id="zoomLabel" class="stats">100%</span>
+        <button id="btnZoomIn" class="btn">+</button>
+        <button id="btnFit" class="btn">Dopasuj</button>
+        <button id="btnTheme" class="btn">☀️ / 🌙</button>
+        <a class="btn btn-primary" href="http://localhost:3006" target="_blank" rel="noopener">bmclinic.co ↗</a>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <div id="canvas">
+        <div id="world">
+          <svg id="edges"></svg>
+          <div id="nodes"></div>
+        </div>
+        <div class="legend">
+          <strong>✨ Wskazówka:</strong>
+          <span>🖐️ Chwyć i przesuń dowolny kafelek</span>
+          <span><span class="dot" style="background:#34d399"></span>Baza</span>
+          <span><span class="dot" style="background:#38bdf8"></span>Wykonane</span>
+          <span><span class="dot" style="background:#fb7185"></span>API</span>
+          <span><span class="dot" style="background:#fbbf24"></span>Do wykonania</span>
+        </div>
+      </div>
+
+      <aside id="inspector"></aside>
+    </div>
+  </div>
+
+  <div id="previewModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <strong id="modalTitle" style="font-size:15px">Podgląd strony</strong>
+          <span id="modalPath" style="font-family:monospace;font-size:12.5px;color:var(--accent);margin-left:8px"></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <a id="modalExternal" class="btn btn-primary" href="#" target="_blank" rel="noopener">Otwórz w nowej karcie ↗</a>
+          <button id="modalClose" class="btn">Zamknij ✕</button>
+        </div>
+      </div>
+      <iframe id="modalIframe" class="modal-iframe"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://localhost:3006';
+    const STORAGE_KEY = 'bmclinic_sitemap_state_v2';
+
+    const CANDY_EMOJIS = ['💖', '⭐', '🌈', '🦋', '🍬', '🌸', '✨', '💎', '👑', '🎀', '🦄', '🔥', '🎯', '🏥', '🩺', '🛍️', '📅', '📚', '✅', '⚠️', '🛠️', '🚀'];
+    const CANDY_COLORS = ['#ff6ec7', '#f472b6', '#fb7185', '#fb923c', '#facc15', '#34d399', '#2dd4bf', '#38bdf8', '#818cf8', '#a855f7'];
+
+    const SITE_TREE = {
+      id: 'root',
+      title: 'bmclinic.co',
+      emoji: '🏥',
+      path: '/',
+      description: 'Zunifikowany projekt kliniki BM Clinic (bmclinic.co-unified na porcie 3006). Baza: frontend Milenki + wpięty portal MCML + panele Next.js.',
+      status: 'base',
+      color: '#ff6ec7',
+      children: [
+        {
+          id: 'branch-main',
+          title: 'Strona Główna & Oferta',
+          emoji: '🌸',
+          path: '/',
+          description: 'Publiczna strona główna, specjalizacje i cennik.',
+          status: 'base',
+          color: '#34d399',
+          side: 'right',
+          children: [
+            { id: 'home', title: 'Strona Główna (Sky Lobby)', emoji: '✨', path: '/', description: 'Frontend Milenki (bmclinic-home.html): Sky Lobby, 188 grafik, specjalizacje, mapa kliniki, sklep, zgody DOCX.', status: 'base' },
+            { id: 'o-nas', title: 'O nas / Zespół', emoji: '💖', path: '/o-nas', description: 'Informacje o klinice i zespole medycznym.', status: 'done' },
+            { id: 'cennik', title: 'Cennik zabiegów', emoji: '💎', path: '/cennik', description: 'Aktualny cennik konsultacji i zabiegów (do korekty cen!).', status: 'todo' },
+            {
+              id: 'uslugi',
+              title: 'Specjalizacje i Usługi',
+              emoji: '🦋',
+              description: 'Kategorie zabiegów i dynamiczne karty usług (/uslugi/[kategoria]/[uslugaSlug]).',
+              status: 'done',
+              children: [
+                { id: 'uslugi-proktologia', title: 'Proktologia', emoji: '🌿', path: '/uslugi/proktologia', description: 'Konsultacje i zabiegi proktologiczne.', status: 'done' },
+                { id: 'uslugi-zylaki', title: 'Żylaki i naczynka', emoji: '💧', path: '/uslugi/zylaki-naczynka', description: 'Leczenie żylaków i zamykanie naczynek.', status: 'done' },
+                { id: 'uslugi-chirurgia', title: 'Chirurgia ogólna', emoji: '🩺', path: '/uslugi/chirurgia-ogolna', description: 'Zabiegi chirurgii ogólnej z opieką pooperacyjną.', status: 'done' },
+              ]
+            },
+            { id: 'cml', title: 'Moduł CML (bmcml-a)', emoji: '⭐', path: '/cml', description: 'Podstrona prezentacyjna CML.', status: 'done' },
+          ]
+        },
+        {
+          id: 'branch-mcml',
+          title: 'Baza Wiedzy & Portal MCML',
+          emoji: '📚',
+          path: '/mcml/dla-pacjenta',
+          description: 'Wpięty bezkolizyjnie portal edukacyjny i strefa pacjenta MCML / LHP.',
+          status: 'done',
+          color: '#38bdf8',
+          side: 'right',
+          children: [
+            { id: 'mcml-start', title: 'Portal MCML (Start)', emoji: '🌈', path: '/mcml', description: 'Strona wejściowa bazy MCML/LHP.', status: 'done' },
+            { id: 'mcml-pacjent', title: 'Dla Pacjenta (LHP, FiLaC, SiLaC)', emoji: '🎀', path: '/mcml/dla-pacjenta', description: 'Zabiegi LHP, FiLaC, SiLaC, EVLT, CLaCS, 12 poradników, dziennik pacjenta, quiz i FAQ.', status: 'done' },
+            { id: 'mcml-ebook', title: 'E-book: Pajączki i naczynka', emoji: '📖', path: '/mcml/ebook-pajaczki.html', description: 'Interaktywny e-book edukacyjny.', status: 'done' },
+            {
+              id: 'blog',
+              title: 'Blog medyczny',
+              emoji: '✍️',
+              path: '/blog',
+              description: 'Artykuły i poradniki pacjentów.',
+              status: 'done',
+              children: [
+                { id: 'blog-1', title: 'Jak przygotować się do zabiegu', emoji: '📝', path: '/blog/jak-przygotowac-sie-do-zabiegu', description: 'Przykładowy artykuł MDX (/blog/[slug]).', status: 'done' }
+              ]
+            },
+            { id: 'faq', title: 'FAQ (Pytania i odpowiedzi)', emoji: '💡', path: '/faq', description: 'Najczęstsze pytania pacjentów.', status: 'done' },
+          ]
+        },
+        {
+          id: 'branch-commerce',
+          title: 'Rezerwacja, Sklep & Kontakt',
+          emoji: '🛍️',
+          path: '/rezerwacja',
+          description: 'Ścieżka rezerwacji wizyty, zakupy i strony formalne.',
+          status: 'done',
+          color: '#fb923c',
+          side: 'right',
+          children: [
+            { id: 'rezerwacja', title: 'Rezerwacja wizyty online', emoji: '📅', path: '/rezerwacja', description: 'Wybór usługi, lekarza i wolnego terminu.', status: 'done' },
+            {
+              id: 'sklep',
+              title: 'Sklep kliniki',
+              emoji: '🎁',
+              path: '/sklep',
+              description: 'Produkty i pakiety opieki pozabiegowej.',
+              status: 'done',
+              children: [
+                { id: 'sklep-koszyk', title: 'Koszyk', emoji: '🛒', path: '/sklep/koszyk', description: 'Podgląd produktów w koszyku.', status: 'done' },
+                { id: 'sklep-podsumowanie', title: 'Podsumowanie zamówienia', emoji: '💳', path: '/sklep/podsumowanie', description: 'Finalizacja zamówienia i płatność.', status: 'done' },
+              ]
+            },
+            { id: 'kontakt', title: 'Kontakt i formularz', emoji: '💌', path: '/kontakt', description: 'Dane kontaktowe i formularz.', status: 'done' },
+            { id: 'polityka', title: 'Polityka prywatności', emoji: '🔒', path: '/polityka', description: 'Dokument RODO i polityka prywatności.', status: 'done' },
+            { id: 'regulamin', title: 'Regulamin', emoji: '📜', path: '/regulamin', description: 'Regulamin świadczenia usług.', status: 'done' },
+          ]
+        },
+        {
+          id: 'branch-patient',
+          title: 'Logowanie & Panel Pacjenta',
+          emoji: '💖',
+          path: '/pacjent',
+          description: 'Strefa pacjenta oraz planowany moduł monitorowania gojenia.',
+          status: 'done',
+          color: '#f472b6',
+          side: 'left',
+          children: [
+            { id: 'logowanie', title: 'Logowanie (NextAuth / Google)', emoji: '🔑', path: '/logowanie', description: 'Logowanie dla pacjentów, lekarzy i adminów.', status: 'done' },
+            {
+              id: 'pacjent',
+              title: 'Panel Pacjenta (Dashboard)',
+              emoji: '🌷',
+              path: '/pacjent',
+              description: 'Wizyty, zalecenia i historia pacjenta.',
+              status: 'done',
+              children: [
+                { id: 'pacjent-profil', title: 'Profil pacjenta', emoji: '👤', path: '/pacjent/profil', description: 'Dane konta i ustawienia.', status: 'done' },
+                { id: 'pacjent-gojenie', title: 'Panel przebiegu gojenia ran', emoji: '🩹', description: 'DO WYKONANIA: dziennik gojenia, objawy alarmowe i zdjęcia kontrolne.', status: 'todo' },
+              ]
+            }
+          ]
+        },
+        {
+          id: 'branch-staff',
+          title: 'Panel Lekarza & Admina',
+          emoji: '👑',
+          path: '/admin',
+          description: 'Zarządzanie kliniką, kalendarz i Chronos Lite.',
+          status: 'done',
+          color: '#a855f7',
+          side: 'left',
+          children: [
+            {
+              id: 'lekarz',
+              title: 'Panel Lekarza',
+              emoji: '🩺',
+              path: '/lekarz',
+              description: 'Widok dzienny lekarza.',
+              status: 'done',
+              children: [
+                { id: 'lekarz-kalendarz', title: 'Kalendarz lekarza', emoji: '🗓️', path: '/lekarz/kalendarz', description: 'Harmonogram wizyt.', status: 'done' },
+                { id: 'lekarz-chronos', title: 'Chronos Lite (Lekarz)', emoji: '⏱️', path: '/lekarz/chronos', description: 'Lekki widok Chronos bez 3D.', status: 'done' },
+              ]
+            },
+            {
+              id: 'admin',
+              title: 'Panel Administratora',
+              emoji: '⚙️',
+              path: '/admin',
+              description: 'Główny panel zarządzania kliniką.',
+              status: 'done',
+              children: [
+                { id: 'admin-lekarze', title: 'Zarządzanie lekarzami', emoji: '👩‍⚕️', path: '/admin/lekarze', description: 'Lista lekarzy i grafiki.', status: 'done' },
+                { id: 'admin-uslugi', title: 'Zarządzanie usługami', emoji: '🏷️', path: '/admin/uslugi', description: 'Edycja zabiegów i cen.', status: 'done' },
+                { id: 'admin-zamowienia', title: 'Zamówienia ze sklepu', emoji: '📦', path: '/admin/zamowienia', description: 'Obsługa zamówień.', status: 'done' },
+                { id: 'admin-chronos', title: 'Chronos Lite (Admin)', emoji: '🎛️', path: '/admin/chronos', description: 'Widok operacyjny Chronos Lite.', status: 'done' },
+              ]
+            }
+          ]
+        },
+        {
+          id: 'branch-api-todo',
+          title: 'Backend API & Do Wpięcia',
+          emoji: '🚀',
+          description: 'Endpointy API oraz gotowe moduły z Google Drive do podłączenia.',
+          status: 'api',
+          color: '#fb7185',
+          side: 'left',
+          children: [
+            {
+              id: 'api-group',
+              title: 'Endpointy API (/api/*)',
+              emoji: '⚡',
+              description: 'Warstwa backendowa Next.js + Prisma.',
+              status: 'api',
+              children: [
+                { id: 'api-booking', title: 'API Rezerwacji & Terminów', emoji: '📅', path: '/api/booking', description: '/api/booking oraz /api/booking/availability', status: 'api' },
+                { id: 'api-payments', title: 'API Płatności', emoji: '💸', path: '/api/payments/checkout', description: '/api/payments/checkout oraz /api/payments/webhook', status: 'api' },
+                { id: 'api-auth', title: 'API Autoryzacji', emoji: '🛡️', path: '/api/auth/google', description: '/api/auth/[...nextauth] oraz /api/auth/google', status: 'api' },
+                { id: 'api-cms', title: 'API CMS & Kontakt', emoji: '📡', path: '/api/cms', description: '/api/cms oraz /api/kontakt', status: 'api' },
+              ]
+            },
+            {
+              id: 'todo-drive',
+              title: 'Moduły z Drive (Do wpięcia)',
+              emoji: '🍬',
+              description: 'Gotowe fragmenty HTML do decyzji i podłączenia.',
+              status: 'todo',
+              children: [
+                { id: 'todo-app-pacjent', title: 'Aplikacja dla pacjentów', emoji: '📱', description: 'DO WYKONANIA: objawy, objawy alarmowe i rekonwalescencja (np. /aplikacja-pacjenta).', status: 'todo' },
+                { id: 'todo-proktologia', title: 'Empatyczna podstrona proktologiczna', emoji: '🩷', description: 'DO WYKONANIA: dedykowana ścieżka edukacyjna proktologii.', status: 'todo' },
+                { id: 'todo-tactile', title: 'Elementy z Aether / Render Studio', emoji: '🎨', description: 'DO DECYZJI: przeniesienie wybranych przycisków/renderów do bmclinic.co.', status: 'todo' },
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    const STATUS_LABELS = {
+      base: '✨ Baza / Frontend',
+      done: '✅ Wykonane',
+      api: '⚡ API',
+      todo: '🛠️ Do wykonania'
+    };
+
+    let savedState = { statuses: {}, emojis: {}, colors: {}, positions: {}, images: {} };
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      savedState = {
+        statuses: parsed.statuses || {},
+        emojis: parsed.emojis || {},
+        colors: parsed.colors || {},
+        positions: parsed.positions || {},
+        images: parsed.images || {}
+      };
+    } catch {}
+
+    function persist() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState)); } catch {}
+    }
+
+    let layoutMode = 'mindnode';
+    let collapsed = new Set();
+    let selectedId = 'root';
+    let searchQuery = '';
+    let zoom = 0.8;
+    let pan = { x: 0, y: 0 };
+
+    // Canvas pan state
+    let draggingCanvas = false;
+    let canvasDragStart = { x: 0, y: 0, panX: 0, panY: 0 };
+
+    // Node free-drag state
+    let draggingNode = null; // { id, startX, startY, origX, origY, moved, el }
+
+    const NODE_W = 310;
+    const ROOT_W = 280;
+    const NODE_H = 92;
+    const ROOT_H = 98;
+    const X_GAP = 96;
+    const Y_GAP = 22;
+
+    function getStatus(node) { return savedState.statuses[node.id] || node.status; }
+    function getEmoji(node) { return savedState.emojis[node.id] || node.emoji || '⭐'; }
+    function getColor(node, fallback) { return savedState.colors[node.id] || node.color || fallback; }
+
+    function findNode(node, id) {
+      if (node.id === id) return node;
+      for (const c of (node.children || [])) {
+        const found = findNode(c, id);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function flattenNodes(node, out = []) {
+      out.push(node);
+      (node.children || []).forEach(c => flattenNodes(c, out));
+      return out;
+    }
+
+    function countDescendants(node) {
+      return (node.children || []).reduce((sum, c) => sum + 1 + countDescendants(c), 0);
+    }
+
+    function measureHeight(node) {
+      if (!node.children || !node.children.length || collapsed.has(node.id)) return NODE_H;
+      const sum = node.children.reduce((acc, c) => acc + measureHeight(c), 0);
+      return Math.max(NODE_H, sum + (node.children.length - 1) * Y_GAP);
+    }
+
+    let currentLayout = { nodes: [], edges: [], nodeMap: new Map(), bounds: null };
+
+    function computeLayout() {
+      const nodes = [];
+      const edges = [];
+      const nodeMap = new Map();
+
+      const customRoot = savedState.positions[SITE_TREE.id];
+      const rootItem = {
+        node: SITE_TREE,
+        x: customRoot ? customRoot.x : 0,
+        y: customRoot ? customRoot.y : 0,
+        width: ROOT_W,
+        height: ROOT_H,
+        depth: 0,
+        color: getColor(SITE_TREE, '#ff6ec7'),
+        side: 'center'
+      };
+      nodes.push(rootItem);
+      nodeMap.set(SITE_TREE.id, rootItem);
+
+      function place(node, parent, autoX, autoY, side, depth, branchColor) {
+        const color = getColor(node, branchColor);
+        const custom = savedState.positions[node.id];
+        const x = custom ? custom.x : autoX;
+        const y = custom ? custom.y : autoY;
+        const item = { node, x, y, width: NODE_W, height: NODE_H, depth, color, side };
+        nodes.push(item);
+        nodeMap.set(node.id, item);
+        edges.push({ from: parent, to: item, color });
+
+        if (!node.children || !node.children.length || collapsed.has(node.id)) return;
+        const heights = node.children.map(measureHeight);
+        const totalH = heights.reduce((a, b) => a + b, 0) + (node.children.length - 1) * Y_GAP;
+        let cy = autoY - totalH / 2;
+        const nextAutoX = side === 'right'
+          ? autoX + NODE_W / 2 + X_GAP + NODE_W / 2
+          : autoX - NODE_W / 2 - X_GAP - NODE_W / 2;
+
+        node.children.forEach((child, i) => {
+          place(child, item, nextAutoX, cy + heights[i] / 2, side, depth + 1, color);
+          cy += heights[i] + Y_GAP;
+        });
+      }
+
+      if (!collapsed.has(SITE_TREE.id)) {
+        if (layoutMode === 'tree') {
+          const hs = SITE_TREE.children.map(measureHeight);
+          const total = hs.reduce((a, b) => a + b, 0) + (SITE_TREE.children.length - 1) * (Y_GAP + 18);
+          let cy = -total / 2;
+          const x1 = ROOT_W / 2 + X_GAP + NODE_W / 2;
+          SITE_TREE.children.forEach((child, i) => {
+            place(child, rootItem, x1, cy + hs[i] / 2, 'right', 1, child.color || '#34d399');
+            cy += hs[i] + Y_GAP + 18;
+          });
+        } else {
+          const right = SITE_TREE.children.filter(c => c.side !== 'left');
+          const left = SITE_TREE.children.filter(c => c.side === 'left');
+          [[right, 'right'], [left, 'left']].forEach(([list, side]) => {
+            if (!list.length) return;
+            const hs = list.map(measureHeight);
+            const total = hs.reduce((a, b) => a + b, 0) + (list.length - 1) * (Y_GAP + 24);
+            let cy = -total / 2;
+            const x1 = side === 'right'
+              ? ROOT_W / 2 + X_GAP + NODE_W / 2
+              : -(ROOT_W / 2 + X_GAP + NODE_W / 2);
+            list.forEach((child, i) => {
+              place(child, rootItem, x1, cy + hs[i] / 2, side, 1, child.color || '#34d399');
+              cy += hs[i] + Y_GAP + 24;
+            });
+          });
+        }
+      }
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      nodes.forEach(n => {
+        minX = Math.min(minX, n.x - n.width / 2);
+        maxX = Math.max(maxX, n.x + n.width / 2);
+        minY = Math.min(minY, n.y - n.height / 2);
+        maxY = Math.max(maxY, n.y + n.height / 2);
+      });
+      return { nodes, edges, nodeMap, bounds: { minX, maxX, minY, maxY } };
+    }
+
+    const canvasEl = document.getElementById('canvas');
+    const worldEl = document.getElementById('world');
+    const edgesEl = document.getElementById('edges');
+    const nodesEl = document.getElementById('nodes');
+    const inspectorEl = document.getElementById('inspector');
+    const zoomLabel = document.getElementById('zoomLabel');
+    const statsText = document.getElementById('statsText');
+
+    function applyTransform() {
+      worldEl.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
+      canvasEl.style.backgroundSize = `${26 * zoom}px ${26 * zoom}px`;
+      canvasEl.style.backgroundPosition = `${pan.x}px ${pan.y}px`;
+      zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+    }
+
+    function fitView() {
+      const b = currentLayout.bounds;
+      if (!b) return;
+      const rect = canvasEl.getBoundingClientRect();
+      const w = Math.max(1, b.maxX - b.minX + 140);
+      const h = Math.max(1, b.maxY - b.minY + 140);
+      zoom = Math.min(1.1, Math.max(0.35, Math.min(rect.width / w, rect.height / h)));
+      const cx = (b.minX + b.maxX) / 2;
+      const cy = (b.minY + b.maxY) / 2;
+      pan.x = rect.width / 2 - cx * zoom;
+      pan.y = rect.height / 2 - cy * zoom;
+      applyTransform();
+    }
+
+    function drawEdges() {
+      edgesEl.innerHTML = currentLayout.edges.map(edge => {
+        const goRight = edge.to.x >= edge.from.x;
+        const sx = goRight ? edge.from.x + edge.from.width / 2 : edge.from.x - edge.from.width / 2;
+        const sy = edge.from.y;
+        const ex = goRight ? edge.to.x - edge.to.width / 2 : edge.to.x + edge.to.width / 2;
+        const ey = edge.to.y;
+        const cp = Math.max(48, Math.abs(ex - sx) * 0.52);
+        const c1x = goRight ? sx + cp : sx - cp;
+        const c2x = goRight ? ex - cp : ex + cp;
+        return `<path d="M ${sx} ${sy} C ${c1x} ${sy}, ${c2x} ${ey}, ${ex} ${ey}" fill="none" stroke="${edge.color}" stroke-width="${edge.to.depth === 1 ? 4 : 2.6}" stroke-opacity="0.85" stroke-linecap="round" />`;
+      }).join('');
+    }
+
+    const modalEl = document.getElementById('previewModal');
+    const modalTitleEl = document.getElementById('modalTitle');
+    const modalPathEl = document.getElementById('modalPath');
+    const modalExternalEl = document.getElementById('modalExternal');
+    const modalIframeEl = document.getElementById('modalIframe');
+
+    function openLargePreview(node) {
+      if (!node || !node.path || node.path.startsWith('/api/')) return;
+      const url = `${BASE_URL}${node.path}`;
+      modalTitleEl.textContent = `${getEmoji(node)} ${node.title}`;
+      modalPathEl.textContent = node.path;
+      modalExternalEl.href = url;
+      modalIframeEl.src = url;
+      modalEl.classList.add('open');
+    }
+    function closeLargePreview() {
+      modalEl.classList.remove('open');
+      modalIframeEl.src = 'about:blank';
+    }
+    document.getElementById('modalClose').onclick = closeLargePreview;
+    modalEl.onclick = e => { if (e.target === modalEl) closeLargePreview(); };
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') closeLargePreview(); });
+
+    function buildVisualMockupGraphic(node, em, col, st) {
+      const customImg = savedState.images[node.id];
+      if (customImg) {
+        return `<img src="${customImg}" alt="${node.title}" style="width:100%;height:100%;object-fit:cover;display:block" />`;
+      }
+      const isApi = st === 'api' || (node.path && node.path.startsWith('/api/'));
+      const isTodo = st === 'todo';
+      const children = (node.children || []).slice(0, 4);
+      const pills = children.length
+        ? children.map(c => `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid ${col}55;color:#f8fafc;font-size:12px;font-weight:700"><span>${getEmoji(c)}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.title}</span></div>`).join('')
+        : isApi
+          ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">
+               <div style="padding:10px 12px;border-radius:10px;background:rgba(15,23,42,0.85);border:1px solid ${col}66;font-family:monospace;font-size:11.5px;color:#38bdf8">GET ${node.path || '/api/*'}<div style="color:#34d399;margin-top:4px;font-weight:700">● 200 OK · JSON</div></div>
+               <div style="padding:10px 12px;border-radius:10px;background:rgba(15,23,42,0.85);border:1px solid ${col}66;font-family:monospace;font-size:11.5px;color:#f472b6">POST ${node.path || '/api/*'}<div style="color:#fbbf24;margin-top:4px;font-weight:700">🔒 Auth / Prisma</div></div>
+             </div>`
+          : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">
+               <div style="padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px dashed ${col}88;font-size:11.5px;color:#e2e8f0"><strong style="display:block;color:${col};margin-bottom:3px">📐 Makieta modułu</strong>${isTodo ? 'Zaplanowany ekran do wdrożenia' : 'Widok sekcji kliniki'}</div>
+               <div style="padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid ${col}55;font-size:11.5px;color:#e2e8f0"><strong style="display:block;color:#38bdf8;margin-bottom:3px">🔗 Integracja</strong>bmclinic.co (:3006)</div>
+             </div>`;
+      return `
+        <div style="width:100%;height:100%;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:radial-gradient(circle at 18% 18%, ${col}44, transparent 58%), linear-gradient(145deg, #0f172a 0%, #1e1b4b 55%, #0b1120 100%);color:#f8fafc">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg, ${col}, #38bdf8);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 24px ${col}55">${em}</div>
+              <div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:${col}">${STATUS_LABELS[st]}</div>
+                <div style="font-size:16px;font-weight:800;line-height:1.25;margin-top:2px">${node.title}</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:${children.length > 1 ? '1fr 1fr' : '1fr'};gap:8px;margin-top:14px">${pills}</div>
+          <div style="font-size:11.5px;color:#cbd5e1;opacity:0.9;margin-top:12px;border-top:1px solid rgba(255,255,255,0.12);padding-top:10px;line-height:1.4">${node.description}</div>
+        </div>
+      `;
+    }
+
+    function renderInspector() {
+      const node = findNode(SITE_TREE, selectedId);
+      if (!node) {
+        inspectorEl.classList.add('hidden');
+        return;
+      }
+      inspectorEl.classList.remove('hidden');
+      const st = getStatus(node);
+      const em = getEmoji(node);
+      const col = getColor(node, '#ff6ec7');
+      const canOpen = node.path && !node.path.startsWith('/api/');
+      const previewUrl = canOpen ? `${BASE_URL}${node.path}` : null;
+      const customImg = savedState.images[node.id];
+
+      inspectorEl.innerHTML = `
+        <div class="inspector-head">
+          <div>
+            <span class="badge ${st}">${STATUS_LABELS[st]}</span>
+            <div class="inspector-title"><span>${em}</span><span>${node.title}</span></div>
+            ${node.path ? `<div class="inspector-path">${node.path}</div>` : ''}
+          </div>
+          <button class="btn" id="closeInspector">✕</button>
+        </div>
+        <div class="preview-card">
+          <div class="preview-bar">
+            <span>${previewUrl && !customImg ? '📺 Podgląd na żywo' : customImg ? '🖼️ Własna grafika' : '🎨 Karta graficzna modułu'}</span>
+            <div class="preview-bar-actions">
+              <button id="btnUploadGraphic" title="Wgraj własną grafikę dla tej cegiełki">📷 Wgraj</button>
+              ${customImg ? `<button id="btnClearGraphic" title="Usuń własną grafikę">🗑️</button>` : ''}
+              <button id="btnToggleXl" class="${inspectorEl.classList.contains('size-xl') ? 'active' : ''}">XL</button>
+              ${previewUrl && !customImg ? `<button id="btnReloadPreview" title="Odśwież">↻</button><button id="btnExpandPreview">⛶ Pełny</button>` : ''}
+            </div>
+          </div>
+          <input type="file" id="graphicFileInput" accept="image/*" style="display:none" />
+          <div class="preview-viewport" id="previewViewport">
+            ${previewUrl && !customImg ? `
+              <div class="preview-loading" id="previewLoading">Ładowanie miniaturki…</div>
+              <iframe id="previewIframe" src="${previewUrl}" loading="eager"></iframe>
+              <div class="preview-overlay"><span>⛶ Kliknij, aby powiększyć</span></div>
+            ` : buildVisualMockupGraphic(node, em, col, st)}
+          </div>
+        </div>
+        <p class="inspector-desc">${node.description}</p>
+        ${canOpen ? `<a class="btn btn-primary" style="justify-content:center" href="${previewUrl}" target="_blank" rel="noopener">Otwórz podstronę (${node.path}) ↗</a>` : ''}
+
+        <div>
+          <div class="section-label">🍬 Znaczek / ikona segmentu</div>
+          <div class="emoji-picker">
+            ${CANDY_EMOJIS.map(e => `<button class="emoji-btn ${em === e ? 'active' : ''}" data-emoji="${e}">${e}</button>`).join('')}
+          </div>
+        </div>
+
+        <div>
+          <div class="section-label">🌈 Kolor cegiełki</div>
+          <div class="color-picker">
+            ${CANDY_COLORS.map(c => `<button class="color-swatch ${col === c ? 'active' : ''}" style="background:${c}" data-color="${c}"></button>`).join('')}
+          </div>
+        </div>
+
+        <div>
+          <div class="section-label">Status realizacji</div>
+          <div class="status-picker">
+            ${['base', 'done', 'api', 'todo'].map(key => `
+              <button data-status="${key}" class="${st === key ? 'active' : ''}">${STATUS_LABELS[key]}</button>
+            `).join('')}
+          </div>
+        </div>
+
+        ${(node.children && node.children.length) ? `
+          <div>
+            <div class="section-label">Bezpośrednie odnośniki (${node.children.length})</div>
+            <div class="child-list">
+              ${node.children.map(c => `
+                <button class="child-item" data-select="${c.id}">
+                  <span style="font-size:20px">${getEmoji(c)}</span>
+                  <div style="min-width:0">
+                    <strong>${c.title}</strong>
+                    <span>${c.path || 'sekcja / grupa'} • ${STATUS_LABELS[getStatus(c)]}</span>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+
+      document.getElementById('closeInspector').onclick = () => { selectedId = null; render(); };
+      const btnToggleXl = document.getElementById('btnToggleXl');
+      if (btnToggleXl) {
+        btnToggleXl.onclick = () => {
+          inspectorEl.classList.toggle('size-xl');
+          btnToggleXl.classList.toggle('active');
+          setTimeout(fitView, 220);
+        };
+      }
+      const btnUploadGraphic = document.getElementById('btnUploadGraphic');
+      const graphicFileInput = document.getElementById('graphicFileInput');
+      if (btnUploadGraphic && graphicFileInput) {
+        btnUploadGraphic.onclick = () => graphicFileInput.click();
+        graphicFileInput.onchange = e => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            savedState.images[node.id] = reader.result;
+            persist();
+            render();
+          };
+          reader.readAsDataURL(file);
+        };
+      }
+      const btnClearGraphic = document.getElementById('btnClearGraphic');
+      if (btnClearGraphic) {
+        btnClearGraphic.onclick = () => {
+          delete savedState.images[node.id];
+          persist();
+          render();
+        };
+      }
+      if (previewUrl && !customImg) {
+        const iframe = document.getElementById('previewIframe');
+        const loading = document.getElementById('previewLoading');
+        iframe.onload = () => loading.classList.add('done');
+        document.getElementById('btnReloadPreview').onclick = () => {
+          loading.classList.remove('done');
+          iframe.src = previewUrl;
+        };
+        document.getElementById('btnExpandPreview').onclick = () => openLargePreview(node);
+        document.getElementById('previewViewport').onclick = () => openLargePreview(node);
+      }
+      inspectorEl.querySelectorAll('[data-emoji]').forEach(btn => {
+        btn.onclick = () => { savedState.emojis[node.id] = btn.dataset.emoji; persist(); render(); };
+      });
+      inspectorEl.querySelectorAll('[data-color]').forEach(btn => {
+        btn.onclick = () => { savedState.colors[node.id] = btn.dataset.color; persist(); render(); };
+      });
+      inspectorEl.querySelectorAll('[data-status]').forEach(btn => {
+        btn.onclick = () => { savedState.statuses[node.id] = btn.dataset.status; persist(); render(); };
+      });
+      inspectorEl.querySelectorAll('[data-select]').forEach(btn => {
+        btn.onclick = () => { selectedId = btn.dataset.select; render(); };
+      });
+    }
+
+    function render(shouldFit = false) {
+      const all = flattenNodes(SITE_TREE);
+      const doneCount = all.filter(n => ['base', 'done', 'api'].includes(getStatus(n))).length;
+      const todoCount = all.filter(n => getStatus(n) === 'todo').length;
+      statsText.textContent = `${all.length} cegiełek • ${doneCount} gotowych • ${todoCount} do wykonania • przeciągaj swobodnie`;
+
+      currentLayout = computeLayout();
+      drawEdges();
+
+      const q = searchQuery.trim().toLowerCase();
+      nodesEl.innerHTML = '';
+
+      currentLayout.nodes.forEach(item => {
+        const el = document.createElement('div');
+        const isRoot = item.depth === 0;
+        const st = getStatus(item.node);
+        const em = getEmoji(item.node);
+        const matches = !q ||
+          item.node.title.toLowerCase().includes(q) ||
+          (item.node.path && item.node.path.toLowerCase().includes(q)) ||
+          item.node.description.toLowerCase().includes(q);
+
+        el.className = `node ${isRoot ? 'root' : ''} ${matches ? '' : 'dimmed'}`;
+        el.dataset.id = item.node.id;
+        el.style.left = `${item.x - item.width / 2}px`;
+        el.style.top = `${item.y - item.height / 2}px`;
+        el.style.width = `${item.width}px`;
+        el.style.minHeight = `${item.height}px`;
+        if (!isRoot) {
+          el.style.borderColor = selectedId === item.node.id ? item.color : `${item.color}66`;
+        }
+        if (selectedId === item.node.id) {
+          el.style.boxShadow = `0 0 0 3px ${item.color}, 0 16px 34px ${item.color}44`;
+        }
+
+        const hasChildren = item.node.children && item.node.children.length > 0;
+        const isCollapsed = collapsed.has(item.node.id);
+        const canOpen = item.node.path && !item.node.path.startsWith('/api/');
+
+        el.innerHTML = `
+          ${!isRoot ? `<div class="node-accent" style="background:${item.color}"></div>` : ''}
+          <div class="node-top">
+            <div class="node-emoji">${em}</div>
+            <div style="min-width:0;flex:1">
+              <div class="node-title" title="${item.node.title}">${item.node.title}</div>
+              <div class="node-path">${item.node.path || 'sekcja / grupa'}</div>
+            </div>
+            ${canOpen ? `<a class="node-open" href="${BASE_URL}${item.node.path}" target="_blank" rel="noopener" title="Otwórz ${item.node.path}">↗</a>` : ''}
+          </div>
+          ${!isRoot ? `
+            <div class="node-bottom">
+              <span class="badge ${st}">${STATUS_LABELS[st]}</span>
+              ${hasChildren ? `<button class="collapse-btn">${isCollapsed ? `▸ +${countDescendants(item.node)}` : `▾ ${item.node.children.length}`}</button>` : ''}
+            </div>
+          ` : ''}
+        `;
+
+        // Smooth free drag on mousedown
+        el.onmousedown = e => {
+          if (e.target.closest('.node-open') || e.target.closest('.collapse-btn')) return;
+          e.stopPropagation();
+          draggingNode = {
+            id: item.node.id,
+            item,
+            el,
+            startX: e.clientX,
+            startY: e.clientY,
+            origX: item.x,
+            origY: item.y,
+            moved: false
+          };
+          el.classList.add('is-dragging');
+        };
+
+        const openLink = el.querySelector('.node-open');
+        if (openLink) openLink.onclick = e => e.stopPropagation();
+
+        const colBtn = el.querySelector('.collapse-btn');
+        if (colBtn) {
+          colBtn.onclick = e => {
+            e.stopPropagation();
+            if (collapsed.has(item.node.id)) collapsed.delete(item.node.id);
+            else collapsed.add(item.node.id);
+            render();
+          };
+        }
+
+        nodesEl.appendChild(el);
+      });
+
+      renderInspector();
+      if (shouldFit) fitView();
+      else applyTransform();
+    }
+
+    // Canvas pan
+    canvasEl.onmousedown = e => {
+      if (e.target.closest('.node') || e.target.closest('.legend')) return;
+      draggingCanvas = true;
+      canvasEl.classList.add('dragging-canvas');
+      canvasDragStart = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    };
+
+    window.onmousemove = e => {
+      if (draggingNode) {
+        const dx = (e.clientX - draggingNode.startX) / zoom;
+        const dy = (e.clientY - draggingNode.startY) / zoom;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) draggingNode.moved = true;
+        draggingNode.item.x = draggingNode.origX + dx;
+        draggingNode.item.y = draggingNode.origY + dy;
+        draggingNode.el.style.left = `${draggingNode.item.x - draggingNode.item.width / 2}px`;
+        draggingNode.el.style.top = `${draggingNode.item.y - draggingNode.item.height / 2}px`;
+        drawEdges();
+        return;
+      }
+      if (draggingCanvas) {
+        pan.x = canvasDragStart.panX + (e.clientX - canvasDragStart.x);
+        pan.y = canvasDragStart.panY + (e.clientY - canvasDragStart.y);
+        applyTransform();
+      }
+    };
+
+    window.onmouseup = () => {
+      if (draggingNode) {
+        const d = draggingNode;
+        draggingNode = null;
+        d.el.classList.remove('is-dragging');
+        if (d.moved) {
+          savedState.positions[d.id] = { x: d.item.x, y: d.item.y };
+          persist();
+        } else {
+          selectedId = d.id;
+          render();
+        }
+      }
+      if (draggingCanvas) {
+        draggingCanvas = false;
+        canvasEl.classList.remove('dragging-canvas');
+      }
+    };
+
+    // Smooth macOS trackpad navigation:
+    // - Two-finger scroll (!ctrlKey) = smooth pan (przesuwanie drzewka)
+    // - Pinch-to-zoom (ctrlKey / metaKey) = gentle, smoothed zoom
+    let targetPanX = pan.x;
+    let targetPanY = pan.y;
+    let targetZoom = zoom;
+    let wheelRaf = null;
+
+    function runSmoothWheel() {
+      const dx = targetPanX - pan.x;
+      const dy = targetPanY - pan.y;
+      const dz = targetZoom - zoom;
+      if (Math.abs(dx) < 0.35 && Math.abs(dy) < 0.35 && Math.abs(dz) < 0.0008) {
+        pan.x = targetPanX;
+        pan.y = targetPanY;
+        zoom = targetZoom;
+        applyTransform();
+        wheelRaf = null;
+        return;
+      }
+      pan.x += dx * 0.24;
+      pan.y += dy * 0.24;
+      zoom += dz * 0.22;
+      applyTransform();
+      wheelRaf = requestAnimationFrame(runSmoothWheel);
+    }
+
+    canvasEl.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (!wheelRaf) {
+        targetPanX = pan.x;
+        targetPanY = pan.y;
+        targetZoom = zoom;
+      }
+      if (e.ctrlKey || e.metaKey) {
+        const rect = canvasEl.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const clampedDelta = Math.max(-45, Math.min(45, e.deltaY));
+        const factor = Math.exp(-clampedDelta * 0.0038);
+        const prevZoom = targetZoom;
+        const nextZoom = Math.min(1.8, Math.max(0.3, prevZoom * factor));
+        const ratio = nextZoom / prevZoom;
+        targetPanX = mx - (mx - targetPanX) * ratio;
+        targetPanY = my - (my - targetPanY) * ratio;
+        targetZoom = nextZoom;
+      } else {
+        targetPanX -= e.deltaX * 0.85;
+        targetPanY -= e.deltaY * 0.85;
+      }
+      if (!wheelRaf) wheelRaf = requestAnimationFrame(runSmoothWheel);
+    }, { passive: false });
+
+    document.getElementById('btnMindnode').onclick = () => {
+      layoutMode = 'mindnode';
+      document.getElementById('btnMindnode').classList.add('active');
+      document.getElementById('btnTree').classList.remove('active');
+      render(true);
+    };
+    document.getElementById('btnTree').onclick = () => {
+      layoutMode = 'tree';
+      document.getElementById('btnTree').classList.add('active');
+      document.getElementById('btnMindnode').classList.remove('active');
+      render(true);
+    };
+    document.getElementById('searchInput').oninput = e => { searchQuery = e.target.value; render(); };
+    document.getElementById('btnExpandAll').onclick = () => { collapsed.clear(); render(true); };
+    document.getElementById('btnCollapse').onclick = () => {
+      collapsed = new Set(SITE_TREE.children.map(c => c.id));
+      render(true);
+    };
+    document.getElementById('btnResetPos').onclick = () => {
+      savedState.positions = {};
+      persist();
+      render(true);
+    };
+    document.getElementById('btnZoomIn').onclick = () => { zoom = Math.min(1.8, zoom + 0.12); applyTransform(); };
+    document.getElementById('btnZoomOut').onclick = () => { zoom = Math.max(0.3, zoom - 0.12); applyTransform(); };
+    document.getElementById('btnFit').onclick = fitView;
+    document.getElementById('btnTheme').onclick = () => document.body.classList.toggle('light');
+    window.onresize = fitView;
+
+    render(true);
+  </script>
+</body>
+</html>
